@@ -1,6 +1,6 @@
 [package]
 name = "pdbwalker"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024"
 description = "Advanced PE binary scanner with PDB debug symbol detection and download capabilities"
 repository = "https://github.com/19h/pdbwalker"
