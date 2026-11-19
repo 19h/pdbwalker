@@ -73,9 +73,14 @@ Several paths can be given, and a path may be a single file. Directories are sca
 # Gather PDBs (local ones are copied, missing ones downloaded) in ./symbols
 pdbwalker --download-remote -o ./symbols C:\Windows\System32
 
-# The same, together with the binaries
-pdbwalker --copy-binaries --download-remote -o ./analysis "C:\Program Files\MyApp"
+# The same, together with the binaries (-b is short for --copy-binaries)
+pdbwalker -b --download-remote -o ./analysis "C:\Program Files\MyApp"
+
+# Download next to each binary, then collect every binary/PDB pair in ./out
+pdbwalker --search --download -b -o ./out C:\Windows\System32
 ```
+
+Without `-b` only PDBs go into the output directory. With `--search`, only binaries whose PDB the server has are collected.
 
 PDBs downloaded into an output directory keep the name their binary refers to (for example `ntkrnlmp.pdb` for `ntoskrnl.exe`). A PDB next to a binary is copied unless it is known to come from a different build. A `manifest.json` records what was copied or downloaded:
 
@@ -213,8 +218,9 @@ Symbol server:
   -j, --jobs <N>             Number of parallel symbol server requests [default: 16]
 
 Output directory:
-  -o, --output <DIR>     Collect PDB files into this directory and write a manifest.json
-      --copy-binaries    Also copy the binaries into the output directory
+  -o, --output <DIR>     Collect PDBs (and, with -b, their binaries) in this directory and write a
+                         manifest.json
+  -b, --copy-binaries    Also copy each binary into the output directory, alongside its PDB
       --download-remote  Download PDBs that are not available locally into the output directory
 ```
 

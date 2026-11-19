@@ -439,6 +439,25 @@ fn download_and_output_directory_work_together() {
 }
 
 #[test]
+fn copy_binaries_puts_each_listed_binary_beside_its_pdb_in_the_output_directory() {
+    let (dir, pdb) = fixture();
+    let server = server_with(&pdb);
+    let out = tempfile::tempdir().unwrap();
+    let out_arg = out.path().to_str().unwrap();
+
+    let args = ["--search", "--download", "-b", "-o", out_arg];
+    let output = pdbwalker(&server, &args, dir.path());
+    assert!(output.status.success(), "{}", stderr(&output));
+
+    // Only tool.exe has symbols on the server, so only it and its PDB are collected.
+    let expected = ["manifest.json", "tool.exe", "tool.pdb"];
+    assert_eq!(file_names(out.path()), expected);
+    let original = fs::read(dir.path().join("tool.exe")).unwrap();
+    assert_eq!(fs::read(out.path().join("tool.exe")).unwrap(), original);
+    assert_eq!(fs::read(out.path().join("tool.pdb")).unwrap(), pdb);
+}
+
+#[test]
 fn two_binaries_never_fight_over_one_pdb_name() {
     let dir = tempfile::tempdir().unwrap();
     // Both map to app.pdb; only the DLL's debug record actually names app.pdb.

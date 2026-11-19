@@ -15,7 +15,8 @@ Examples:
   pdbwalker C:\\Windows\\System32            List PE files and their debug info
   pdbwalker --search C:\\Windows\\System32   List PE files whose PDB is on the symbol server
   pdbwalker --search --download ./bin       ...and save each one next to its binary
-  pdbwalker --download foo.exe              Fetch foo.pdb next to foo.exe";
+  pdbwalker --download foo.exe              Fetch foo.pdb next to foo.exe
+  pdbwalker -s -d -b -o ./out ./bin         Download, then collect binaries and PDBs in ./out";
 
 #[derive(Debug, Parser)]
 #[command(version, about, after_help = EXAMPLES, max_term_width = 100)]
@@ -95,7 +96,7 @@ pub struct Cli {
     )]
     pub jobs: u16,
 
-    /// Collect PDB files into this directory and write a manifest.json
+    /// Collect PDBs (and, with -b, their binaries) in this directory and write a manifest.json
     #[arg(
         short,
         long = "output",
@@ -104,8 +105,13 @@ pub struct Cli {
     )]
     pub output_dir: Option<PathBuf>,
 
-    /// Also copy the binaries into the output directory
-    #[arg(long, requires = "output_dir", help_heading = "Output directory")]
+    /// Also copy each binary into the output directory, alongside its PDB
+    #[arg(
+        short = 'b',
+        long,
+        requires = "output_dir",
+        help_heading = "Output directory"
+    )]
     pub copy_binaries: bool,
 
     /// Download PDBs that are not available locally into the output directory
@@ -148,6 +154,9 @@ mod tests {
     #[test]
     fn output_only_flags_require_output_dir() {
         assert!(Cli::try_parse_from(["pdbwalker", "--copy-binaries", "."]).is_err());
+        assert!(Cli::try_parse_from(["pdbwalker", "-b", "."]).is_err());
+        let cli = Cli::try_parse_from(["pdbwalker", "-b", "-o", "out", "."]).unwrap();
+        assert!(cli.copy_binaries);
         assert!(Cli::try_parse_from(["pdbwalker", "--download-remote", "."]).is_err());
         assert!(Cli::try_parse_from(["pdbwalker", "--download-remote", "-o", "out", "."]).is_ok());
     }
